@@ -7,28 +7,51 @@ import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { withStyles} from '@material-ui/core/styles';
 
 
 const styles = theme =>({
   root: {
     width : '100%',
-    marginTop: theme.spacing.unit* 3,
+    marginTop: theme.spacing(3),
     overflowX: "auto"
     
   },
   table:{
     minWidth:1080
+  },
+  progress: {
+    margin: theme.spacing(2)
   }
 })
+
+/* 
+처음 컨포넌트 실행하면 따르는 순서(lifecycle)
+1) constructor()
+2) componentwillMount()
+3) render() //컴포넌트를 화면에 그림
+4) componentDidMount()
+
+*/
+
+/*
+props or state => shouldComponetUpdate()
+props or state가 변경되는 경우 shouldComponetUpdate()함수를 사용
+다시 render() 함수를 불러와서 뷰를 갱신해줌
+리액트는 상태의 변화를 감지를 해서 뷰를 다시 재구성
+프로그래머는 상태만 잘 관리해주면 된다.
+*/
 
 class App extends Component {
 
   state = {
-    customers:""
+    customers:"",
+    completed: 0
   }
 
   componentDidMount() {
+    this.timer = setInterval(this.progress, 20);
     this.callApi()
     .then(res => this.setState({customers: res}))
     .catch(err => console.log(err));
@@ -39,6 +62,12 @@ class App extends Component {
     const body = await response.json();
     return body;
   }
+
+  progress = () =>{
+    const { completed } = this.state;
+    this.setState({ completed: completed >= 100 ? 0: completed +1});
+  }
+
   render(){
       const { classes } =this.props;
     return ( 
@@ -56,7 +85,13 @@ class App extends Component {
           </TableHead>
           <TableBody>
             {this.state.customers ? this.state.customers.map(c => { return (<Customer key={c.id} image={c.image} name={c.name} birthday={c.birthday} gender={c.gender} job={c.job}/> ); 
-            }) :""}
+            }) :
+            <TableRow>
+              <TableCell colSpan="6" align="center">
+                <CircularProgress className={classes.progress} variant="determinate" value={this.state.completed}/>
+              </TableCell>
+            </TableRow>
+            }
           </TableBody>
         </Table>      
       </Paper>
